@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace BookStore.WebApplication.Areas.Identity.Pages.Account
 {
@@ -61,6 +62,21 @@ namespace BookStore.WebApplication.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Required]
+            [Display(Name = "Address")]
+            [DataType(DataType.Text)]
+            public string Address { get; set; }
+
+            [Required]
+            [Display(Name = "CompanyStartedDate")]
+            [DataType(DataType.Date)]
+            public DateTime CompanyStartedDate{ get; set; }
+
+            [Required]
+            [Display(Name = "Dob")]
+            [DataType(DataType.Date)]
+            public DateTime Dob { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -75,12 +91,12 @@ namespace BookStore.WebApplication.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = Input.Email, Email = Input.Email };
+                var user = new ApplicationUser { UserName = Input.Email, Email = Input.Email, Address = Input.Address };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-
+                    await _userManager.AddClaimAsync(user, new Claim("Dob", Input.Dob.ToString()));
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
